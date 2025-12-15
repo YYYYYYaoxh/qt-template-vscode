@@ -3,5 +3,33 @@
   "cmake.buildDirectory": "${workspaceFolder}/build",
   "cmake.configureOnOpen": false,
   "cmake.generator": "Ninja",
-  "cmake.exportCompileCommandsFile": true
+  "cmake.exportCompileCommandsFile": true,
+
+  "clangd.detectExtensionConflicts": true,
+  "clangd.path": "/usr/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--compile-commands-dir=${workspaceFolder}/build",
+    "-j=12",
+    "--all-scopes-completion",
+    "--completion-style=detailed",
+    "--header-insertion=iwyu",
+    "--pch-storage=memory",
+    "--cross-file-rename",
+    "--clang-tidy",
+    "--pretty"
+  ],
+
+  "C_Cpp.intelliSenseEngine": "disabled",
+
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "modificationsIfAvailable",
+  "editor.formatOnType": true,
+  "editor.formatOnPaste": true,
+  "[cpp]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
+  "[c]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  }
 }
