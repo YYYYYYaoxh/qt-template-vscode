@@ -1,0 +1,258 @@
+name: windows-qt6-mingw
+
+"on":
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      qt_version:
+        description: "Qt version"
+        required: false
+        default: "6.5.3"
+      qt_arch:
+        description: "Qt arch (install-qt-action arch)"
+        required: false
+        default: "win64_mingw"
+      qt_tools:
+        description: "Qt tools (install-qt-action tools)"
+        required: false
+        default: "tools_mingw90"
+      app_name:
+        description: "CMake APP_NAME (-DAPP_NAME=...)"
+        required: false
+        default: "qt6_minimal"
+      exe_name:
+        description: "Executable file name"
+        required: false
+        default: "qt6_minimal.exe"
+      exe_relative_path:
+        description: "Path to built exe (relative to repo root)"
+        required: false
+        default: "build/bin/qt6_minimal.exe"
+      zip_name:
+        description: "Zip file name"
+        required: false
+        default: "qt6_minimal-windows.zip"
+      release_tag:
+        description: "Release tag (e.g. v1.0.0)"
+        required: false
+        default: ""
+      prerelease:
+        description: "Mark as prerelease (true/false)"
+        required: false
+        default: "false"
+      draft:
+        description: "Create as draft (true/false)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  build-package:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve build variables (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $inputQtVersion = "${{ github.event.inputs.qt_version }}"
+          $repoQtVersion = "${{ vars.QT_VERSION }}"
+          $qtVersion = if (-not [string]::IsNullOrWhiteSpace($inputQtVersion)) { $inputQtVersion } elseif (-not [string]::IsNullOrWhiteSpace($repoQtVersion)) { $repoQtVersion } else { "6.5.3" }
+
+          $inputQtArch = "${{ github.event.inputs.qt_arch }}"
+          $repoQtArch = "${{ vars.QT_ARCH }}"
+          $qtArch = if (-not [string]::IsNullOrWhiteSpace($inputQtArch)) { $inputQtArch } elseif (-not [string]::IsNullOrWhiteSpace($repoQtArch)) { $repoQtArch } else { "win64_mingw" }
+
+          $inputQtTools = "${{ github.event.inputs.qt_tools }}"
+          $repoQtTools = "${{ vars.QT_TOOLS }}"
+          $qtTools = if (-not [string]::IsNullOrWhiteSpace($inputQtTools)) { $inputQtTools } elseif (-not [string]::IsNullOrWhiteSpace($repoQtTools)) { $repoQtTools } else { "tools_mingw90" }
+
+          $inputAppName = "${{ github.event.inputs.app_name }}"
+          $repoAppName = "${{ vars.APP_NAME }}"
+          $appName = if (-not [string]::IsNullOrWhiteSpace($inputAppName)) { $inputAppName } elseif (-not [string]::IsNullOrWhiteSpace($repoAppName)) { $repoAppName } else { "qt6_minimal" }
+
+          $inputExeName = "${{ github.event.inputs.exe_name }}"
+          $exeName = if ([string]::IsNullOrWhiteSpace($inputExeName) -or (($inputExeName -eq "qt6_minimal.exe") -and ($appName -ne "qt6_minimal"))) { "$appName.exe" } else { $inputExeName }
+
+          $inputExeRelativePath = "${{ github.event.inputs.exe_relative_path }}"
+          $exeRelativePath = if ([string]::IsNullOrWhiteSpace($inputExeRelativePath) -or (($inputExeRelativePath -eq "build/bin/qt6_minimal.exe") -and ($appName -ne "qt6_minimal"))) { "build/bin/$exeName" } else { $inputExeRelativePath }
+
+          $inputZipName = "${{ github.event.inputs.zip_name }}"
+          $zipName = if ([string]::IsNullOrWhiteSpace($inputZipName) -or (($inputZipName -eq "qt6_minimal-windows.zip") -and ($appName -ne "qt6_minimal"))) { "$appName-windows.zip" } else { $inputZipName }
+
+          $inputReleaseTag = "${{ github.event.inputs.release_tag }}"
+          $releaseTag = if (-not [string]::IsNullOrWhiteSpace($inputReleaseTag)) { $inputReleaseTag } else { "" }
+
+          $draftFlag = "${{ github.event.inputs.draft }}"
+          $prereleaseFlag = "${{ github.event.inputs.prerelease }}"
+
+          "QT_VERSION=$qtVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "QT_ARCH=$qtArch" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "QT_TOOLS=$qtTools" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "APP_NAME=$appName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "EXE_NAME=$exeName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "EXE_RELATIVE_PATH=$exeRelativePath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "ZIP_NAME=$zipName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RELEASE_TAG=$releaseTag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "DRAFT_FLAG=$draftFlag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PRERELEASE_FLAG=$prereleaseFlag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Resolve build variables (push/pull_request)
+        if: github.event_name != 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $repoQtVersion = "${{ vars.QT_VERSION }}"
+          $qtVersion = if (-not [string]::IsNullOrWhiteSpace($repoQtVersion)) { $repoQtVersion } else { "6.5.3" }
+
+          $repoQtArch = "${{ vars.QT_ARCH }}"
+          $qtArch = if (-not [string]::IsNullOrWhiteSpace($repoQtArch)) { $repoQtArch } else { "win64_mingw" }
+
+          $repoQtTools = "${{ vars.QT_TOOLS }}"
+          $qtTools = if (-not [string]::IsNullOrWhiteSpace($repoQtTools)) { $repoQtTools } else { "tools_mingw90" }
+
+          $repoAppName = "${{ vars.APP_NAME }}"
+          $appName = if (-not [string]::IsNullOrWhiteSpace($repoAppName)) { $repoAppName } else { "qt6_minimal" }
+
+          $exeName = "$appName.exe"
+          $exeRelativePath = "build/bin/$exeName"
+          $zipName = "$appName-windows.zip"
+
+          "QT_VERSION=$qtVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "QT_ARCH=$qtArch" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "QT_TOOLS=$qtTools" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "APP_NAME=$appName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "EXE_NAME=$exeName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "EXE_RELATIVE_PATH=$exeRelativePath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "ZIP_NAME=$zipName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RELEASE_TAG=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "DRAFT_FLAG=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PRERELEASE_FLAG=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Install Qt 6.5.3 with MinGW toolchain
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: windows
+          target: desktop
+          arch: ${{ env.QT_ARCH }}
+          tools: ${{ env.QT_TOOLS }}
+          cache: true
+          setup-python: false
+          add-tools-to-path: true
+
+      - name: Diagnostics (environment)
+        shell: pwsh
+        run: |
+          Write-Host "=== Environment ==="
+          Write-Host "QT_ROOT_DIR=$env:QT_ROOT_DIR"
+          Write-Host "IQTA_TOOLS=$env:IQTA_TOOLS"
+          Write-Host ""
+          Write-Host "=== Compilers in PATH ==="
+          where.exe gcc 2>$null || Write-Host "gcc not found in PATH"
+          where.exe g++ 2>$null || Write-Host "g++ not found in PATH"
+          Write-Host ""
+          Write-Host "=== Qt Tools MinGW ==="
+          $mingwDir = Get-ChildItem -Path "$env:IQTA_TOOLS" -Filter "mingw*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($mingwDir) {
+            Write-Host "Found MinGW at: $($mingwDir.FullName)"
+            $gxx = Join-Path $mingwDir.FullName "bin\g++.exe"
+            if (Test-Path $gxx) {
+              Write-Host "g++ version:"
+              & $gxx --version
+            }
+          } else {
+            Write-Host "No MinGW found in IQTA_TOOLS, checking C:\mingw64..."
+            if (Test-Path "C:\mingw64\bin\g++.exe") {
+              Write-Host "Using pre-installed MinGW at C:\mingw64"
+              & "C:\mingw64\bin\g++.exe" --version
+            }
+          }
+
+      - name: Configure (CMake)
+        shell: pwsh
+        run: |
+          $mingwBin = $null
+          if ($env:IQTA_TOOLS) {
+            $mingwDir = Get-ChildItem -Path "$env:IQTA_TOOLS" -Filter "mingw*" -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($mingwDir) {
+              $mingwBin = Join-Path $mingwDir.FullName "bin"
+            }
+          }
+          if (-not $mingwBin -or -not (Test-Path "$mingwBin\g++.exe")) {
+            $mingwBin = "C:\mingw64\bin"
+          }
+          Write-Host "Using MinGW from: $mingwBin"
+          $gcc = Join-Path $mingwBin "gcc.exe"
+          $gxx = Join-Path $mingwBin "g++.exe"
+          if (-not (Test-Path $gxx)) { throw "g++ not found at $gxx" }
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" `
+            -DCMAKE_C_COMPILER="$gcc" `
+            -DCMAKE_CXX_COMPILER="$gxx" `
+            -DAPP_NAME="$env:APP_NAME"
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake --build build --config Release
+
+      - name: Package (windeployqt)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $distDir = Join-Path $PWD 'dist/windows'
+          if (Test-Path $distDir) { Remove-Item -Recurse -Force $distDir }
+          New-Item -ItemType Directory -Force -Path $distDir | Out-Null
+
+          $exePath = Join-Path $PWD $env:EXE_RELATIVE_PATH
+          if (-not (Test-Path $exePath)) { throw "exe not found at $exePath" }
+          $distExePath = Join-Path $distDir $env:EXE_NAME
+          Copy-Item $exePath $distExePath
+
+          $windeployqt = Join-Path $env:QT_ROOT_DIR 'bin/windeployqt.exe'
+          Write-Host "Using windeployqt: $windeployqt"
+          & $windeployqt --no-translations --compiler-runtime $distExePath
+
+          $zipPath = Join-Path $PWD $env:ZIP_NAME
+          if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
+          Compress-Archive -Path "$distDir/*" -DestinationPath $zipPath
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt6-mingw-windows
+          path: |
+            ${{ env.ZIP_NAME }}
+            dist/windows/
+
+      - name: Create GitHub Release
+        if: env.RELEASE_TAG != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "${{ env.RELEASE_TAG }}"
+          name: "${{ env.RELEASE_TAG }}"
+          draft: ${{ env.DRAFT_FLAG == 'true' }}
+          prerelease: ${{ env.PRERELEASE_FLAG == 'true' }}
+          files: |
+            ${{ env.ZIP_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

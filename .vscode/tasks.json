@@ -1,0 +1,137 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cmake: configure (Debug)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${QT6_DIR:+-DQt6_DIR=\"$QT6_DIR\"} ${CMAKE_PREFIX_PATH:+-DCMAKE_PREFIX_PATH=\"$CMAKE_PREFIX_PATH\"}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "problemMatcher": ["$gcc"],
+      "group": "build"
+    },
+    {
+      "label": "cmake: build (Debug)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "cmake --build build --config Debug -j"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "problemMatcher": ["$gcc"],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "dependsOn": ["cmake: configure (Debug)"]
+    },
+    {
+      "label": "build+run: app (Debug)",
+      "dependsOrder": "sequence",
+      "dependsOn": ["cmake: build (Debug)", "run: app"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "run: app",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "./build/bin/${workspaceFolderBasename}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "dependsOn": ["cmake: build (Debug)"]
+    },
+
+    {
+      "label": "cmake: configure (Release)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${QT6_DIR:+-DQt6_DIR=\"$QT6_DIR\"} ${CMAKE_PREFIX_PATH:+-DCMAKE_PREFIX_PATH=\"$CMAKE_PREFIX_PATH\"}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "problemMatcher": ["$gcc"],
+      "group": "build"
+    },
+    {
+      "label": "cmake: build (Release)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "cmake --build build-release --config Release -j"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "problemMatcher": ["$gcc"],
+      "dependsOn": ["cmake: configure (Release)"],
+      "group": "build"
+    },
+    {
+      "label": "run: app (Release)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "./build-release/bin/${workspaceFolderBasename}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "dependsOn": ["cmake: build (Release)"]
+    },
+
+    {
+      "label": "clean: Debug (rm -rf build)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "rm -rf build"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "group": "build"
+    },
+    {
+      "label": "clean: Release (rm -rf build-release)",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "rm -rf build-release"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "group": "build"
+    }
+  ]
+}
