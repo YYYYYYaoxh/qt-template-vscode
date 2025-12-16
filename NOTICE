@@ -1,0 +1,11 @@
+NOTICES
+
+This product includes the Qt framework (Qt 6).
+
+Qt is available from:
+- https://www.qt.io/
+- Source code: https://download.qt.io/
+
+Qt is licensed under multiple licensing options (e.g. LGPL/GPL/Commercial) depending on the distribution and modules used.
+
+If you redistribute Qt shared libraries with this product, you must comply with the applicable Qt license terms and must not prevent end users from replacing those shared libraries.
