@@ -7,7 +7,7 @@
       "command": "bash",
       "args": [
         "-c",
-        "cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${QT6_DIR:+-DQt6_DIR=\"$QT6_DIR\"} ${CMAKE_PREFIX_PATH:+-DCMAKE_PREFIX_PATH=\"$CMAKE_PREFIX_PATH\"}"
+        "cmake --preset qt6-debug"
       ],
       "options": {
         "cwd": "${workspaceFolder}",
@@ -22,7 +22,7 @@
       "command": "bash",
       "args": [
         "-c",
-        "cmake --build build --config Debug -j"
+        "cmake --build --preset qt6-debug"
       ],
       "options": {
         "cwd": "${workspaceFolder}",
@@ -65,7 +65,7 @@
       "command": "bash",
       "args": [
         "-c",
-        "cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${QT6_DIR:+-DQt6_DIR=\"$QT6_DIR\"} ${CMAKE_PREFIX_PATH:+-DCMAKE_PREFIX_PATH=\"$CMAKE_PREFIX_PATH\"}"
+        "cmake --preset qt6-release"
       ],
       "options": {
         "cwd": "${workspaceFolder}",
@@ -80,7 +80,7 @@
       "command": "bash",
       "args": [
         "-c",
-        "cmake --build build-release --config Release -j"
+        "cmake --build --preset qt6-release"
       ],
       "options": {
         "cwd": "${workspaceFolder}",

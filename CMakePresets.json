@@ -1,0 +1,52 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "qt6-debug",
+      "displayName": "Qt6 Debug (gcc_64)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "environment": {
+        "QT6_ROOT": "/home/yxh/Qt/6.5.3/gcc_64"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_PREFIX_PATH": "$env{QT6_ROOT}",
+        "Qt6_DIR": "$env{QT6_ROOT}/lib/cmake/Qt6",
+        "Qt6SerialPort_DIR": "$env{QT6_ROOT}/lib/cmake/Qt6SerialPort"
+      }
+    },
+    {
+      "name": "qt6-release",
+      "displayName": "Qt6 Release (gcc_64)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-release",
+      "environment": {
+        "QT6_ROOT": "/home/yxh/Qt/6.5.3/gcc_64"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_PREFIX_PATH": "$env{QT6_ROOT}",
+        "Qt6_DIR": "$env{QT6_ROOT}/lib/cmake/Qt6",
+        "Qt6SerialPort_DIR": "$env{QT6_ROOT}/lib/cmake/Qt6SerialPort"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "qt6-debug",
+      "configurePreset": "qt6-debug"
+    },
+    {
+      "name": "qt6-release",
+      "configurePreset": "qt6-release"
+    }
+  ]
+}
