@@ -21,19 +21,19 @@ name: windows-qt6-mingw
       app_name:
         description: "CMake APP_NAME (-DAPP_NAME=...)"
         required: false
-        default: "qt6_minimal"
+        default: ""
       exe_name:
         description: "Executable file name"
         required: false
-        default: "qt6_minimal.exe"
+        default: ""
       exe_relative_path:
         description: "Path to built exe (relative to repo root)"
         required: false
-        default: "build/bin/qt6_minimal.exe"
+        default: ""
       zip_name:
         description: "Zip file name"
         required: false
-        default: "qt6_minimal-windows.zip"
+        default: ""
       release_tag:
         description: "Release tag (e.g. v1.0.0)"
         required: false
@@ -78,16 +78,17 @@ jobs:
 
           $inputAppName = "${{ github.event.inputs.app_name }}"
           $repoAppName = "${{ vars.APP_NAME }}"
-          $appName = if (-not [string]::IsNullOrWhiteSpace($inputAppName)) { $inputAppName } elseif (-not [string]::IsNullOrWhiteSpace($repoAppName)) { $repoAppName } else { "qt6_minimal" }
+          $repoName = "${{ github.event.repository.name }}"
+          $appName = if (-not [string]::IsNullOrWhiteSpace($inputAppName)) { $inputAppName } elseif (-not [string]::IsNullOrWhiteSpace($repoAppName)) { $repoAppName } elseif (-not [string]::IsNullOrWhiteSpace($repoName)) { $repoName } else { "qt6_minimal" }
 
           $inputExeName = "${{ github.event.inputs.exe_name }}"
-          $exeName = if ([string]::IsNullOrWhiteSpace($inputExeName) -or (($inputExeName -eq "qt6_minimal.exe") -and ($appName -ne "qt6_minimal"))) { "$appName.exe" } else { $inputExeName }
+          $exeName = if ([string]::IsNullOrWhiteSpace($inputExeName)) { "$appName.exe" } else { $inputExeName }
 
           $inputExeRelativePath = "${{ github.event.inputs.exe_relative_path }}"
-          $exeRelativePath = if ([string]::IsNullOrWhiteSpace($inputExeRelativePath) -or (($inputExeRelativePath -eq "build/bin/qt6_minimal.exe") -and ($appName -ne "qt6_minimal"))) { "build/bin/$exeName" } else { $inputExeRelativePath }
+          $exeRelativePath = if ([string]::IsNullOrWhiteSpace($inputExeRelativePath)) { "build/bin/$exeName" } else { $inputExeRelativePath }
 
           $inputZipName = "${{ github.event.inputs.zip_name }}"
-          $zipName = if ([string]::IsNullOrWhiteSpace($inputZipName) -or (($inputZipName -eq "qt6_minimal-windows.zip") -and ($appName -ne "qt6_minimal"))) { "$appName-windows.zip" } else { $inputZipName }
+          $zipName = if ([string]::IsNullOrWhiteSpace($inputZipName)) { "$appName-windows.zip" } else { $inputZipName }
 
           $inputReleaseTag = "${{ github.event.inputs.release_tag }}"
           $releaseTag = if (-not [string]::IsNullOrWhiteSpace($inputReleaseTag)) { $inputReleaseTag } else { "" }
@@ -122,7 +123,8 @@ jobs:
           $qtTools = if (-not [string]::IsNullOrWhiteSpace($repoQtTools)) { $repoQtTools } else { "tools_mingw90" }
 
           $repoAppName = "${{ vars.APP_NAME }}"
-          $appName = if (-not [string]::IsNullOrWhiteSpace($repoAppName)) { $repoAppName } else { "qt6_minimal" }
+          $repoName = "${{ github.event.repository.name }}"
+          $appName = if (-not [string]::IsNullOrWhiteSpace($repoAppName)) { $repoAppName } elseif (-not [string]::IsNullOrWhiteSpace($repoName)) { $repoName } else { "qt6_minimal" }
 
           $exeName = "$appName.exe"
           $exeRelativePath = "build/bin/$exeName"
