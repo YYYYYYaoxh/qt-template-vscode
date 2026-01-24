@@ -1,0 +1,171 @@
+name: macos-qt6
+
+"on":
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      qt_version:
+        description: "Qt version"
+        required: false
+        default: "6.5.3"
+      app_name:
+        description: "CMake APP_NAME (-DAPP_NAME=...)"
+        required: false
+        default: ""
+      exe_name:
+        description: "Executable file name"
+        required: false
+        default: ""
+      exe_relative_path:
+        description: "Path to built exe (relative to repo root)"
+        required: false
+        default: ""
+      dmg_name:
+        description: "DMG file name"
+        required: false
+        default: ""
+      release_tag:
+        description: "Release tag (e.g. v1.0.0)"
+        required: false
+        default: ""
+      prerelease:
+        description: "Mark as prerelease (true/false)"
+        required: false
+        default: "false"
+      draft:
+        description: "Create as draft (true/false)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  build-package:
+    runs-on: macos-13
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve build variables (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -e
+
+          input_qt_version="${{ github.event.inputs.qt_version }}"
+          repo_qt_version="${{ vars.QT_VERSION }}"
+          qt_version="${input_qt_version:-${repo_qt_version:-6.5.3}}"
+
+          input_app_name="${{ github.event.inputs.app_name }}"
+          repo_app_name="${{ vars.APP_NAME }}"
+          repo_name="${{ github.event.repository.name }}"
+          app_name="${input_app_name:-${repo_app_name:-${repo_name:-qt6_minimal}}}"
+
+          input_exe_name="${{ github.event.inputs.exe_name }}"
+          exe_name="${input_exe_name:-$app_name}"
+
+          input_exe_relative_path="${{ github.event.inputs.exe_relative_path }}"
+          exe_relative_path="${input_exe_relative_path:-build/bin/$exe_name}"
+
+          input_dmg_name="${{ github.event.inputs.dmg_name }}"
+          dmg_name="${input_dmg_name:-$app_name-macos.dmg}"
+
+          input_release_tag="${{ github.event.inputs.release_tag }}"
+          release_tag="${input_release_tag:-}"
+
+          draft_flag="${{ github.event.inputs.draft }}"
+          prerelease_flag="${{ github.event.inputs.prerelease }}"
+
+          echo "QT_VERSION=$qt_version" >> $GITHUB_ENV
+          echo "APP_NAME=$app_name" >> $GITHUB_ENV
+          echo "EXE_NAME=$exe_name" >> $GITHUB_ENV
+          echo "EXE_RELATIVE_PATH=$exe_relative_path" >> $GITHUB_ENV
+          echo "DMG_NAME=$dmg_name" >> $GITHUB_ENV
+          echo "RELEASE_TAG=$release_tag" >> $GITHUB_ENV
+          echo "DRAFT_FLAG=$draft_flag" >> $GITHUB_ENV
+          echo "PRERELEASE_FLAG=$prerelease_flag" >> $GITHUB_ENV
+
+      - name: Resolve build variables (push/pull_request)
+        if: github.event_name != 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -e
+
+          repo_qt_version="${{ vars.QT_VERSION }}"
+          qt_version="${repo_qt_version:-6.5.3}"
+
+          repo_app_name="${{ vars.APP_NAME }}"
+          repo_name="${{ github.event.repository.name }}"
+          app_name="${repo_app_name:-${repo_name:-qt6_minimal}}"
+
+          exe_name="$app_name"
+          exe_relative_path="build/bin/$exe_name"
+          dmg_name="$app_name-macos.dmg"
+
+          echo "QT_VERSION=$qt_version" >> $GITHUB_ENV
+          echo "APP_NAME=$app_name" >> $GITHUB_ENV
+          echo "EXE_NAME=$exe_name" >> $GITHUB_ENV
+          echo "EXE_RELATIVE_PATH=$exe_relative_path" >> $GITHUB_ENV
+          echo "DMG_NAME=$dmg_name" >> $GITHUB_ENV
+          echo "RELEASE_TAG=" >> $GITHUB_ENV
+          echo "DRAFT_FLAG=false" >> $GITHUB_ENV
+          echo "PRERELEASE_FLAG=false" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          brew install ninja cmake
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: mac
+          target: desktop
+          cache: true
+
+      - name: Configure (CMake)
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$Qt6_DIR" \
+            -DAPP_NAME="$APP_NAME"
+
+      - name: Build
+        run: |
+          cmake --build build --config Release
+
+      - name: Package (macdeployqt)
+        run: |
+          mkdir -p dist/macos
+          cp "$EXE_RELATIVE_PATH" dist/macos/
+
+          "$Qt6_DIR/bin/macdeployqt" dist/macos/"$EXE_NAME" -dmg
+
+          if [ -f "dist/macos/$EXE_NAME.dmg" ]; then
+            mv "dist/macos/$EXE_NAME.dmg" "$DMG_NAME"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt6-macos
+          path: |
+            ${{ env.DMG_NAME }}
+            dist/macos/
+
+      - name: Create GitHub Release
+        if: env.RELEASE_TAG != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "${{ env.RELEASE_TAG }}"
+          name: "${{ env.RELEASE_TAG }}"
+          draft: ${{ env.DRAFT_FLAG == 'true' }}
+          prerelease: ${{ env.PRERELEASE_FLAG == 'true' }}
+          files: |
+            ${{ env.DMG_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

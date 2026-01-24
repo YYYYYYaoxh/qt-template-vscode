@@ -1,0 +1,192 @@
+name: linux-qt6
+
+"on":
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      qt_version:
+        description: "Qt version"
+        required: false
+        default: "6.5.3"
+      app_name:
+        description: "CMake APP_NAME (-DAPP_NAME=...)"
+        required: false
+        default: ""
+      exe_name:
+        description: "Executable file name"
+        required: false
+        default: ""
+      exe_relative_path:
+        description: "Path to built exe (relative to repo root)"
+        required: false
+        default: ""
+      appimage_name:
+        description: "AppImage file name"
+        required: false
+        default: ""
+      release_tag:
+        description: "Release tag (e.g. v1.0.0)"
+        required: false
+        default: ""
+      prerelease:
+        description: "Mark as prerelease (true/false)"
+        required: false
+        default: "false"
+      draft:
+        description: "Create as draft (true/false)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  build-package:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve build variables (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -e
+
+          input_qt_version="${{ github.event.inputs.qt_version }}"
+          repo_qt_version="${{ vars.QT_VERSION }}"
+          qt_version="${input_qt_version:-${repo_qt_version:-6.5.3}}"
+
+          input_app_name="${{ github.event.inputs.app_name }}"
+          repo_app_name="${{ vars.APP_NAME }}"
+          repo_name="${{ github.event.repository.name }}"
+          app_name="${input_app_name:-${repo_app_name:-${repo_name:-qt6_minimal}}}"
+
+          input_exe_name="${{ github.event.inputs.exe_name }}"
+          exe_name="${input_exe_name:-$app_name}"
+
+          input_exe_relative_path="${{ github.event.inputs.exe_relative_path }}"
+          exe_relative_path="${input_exe_relative_path:-build/bin/$exe_name}"
+
+          input_appimage_name="${{ github.event.inputs.appimage_name }}"
+          appimage_name="${input_appimage_name:-$app_name-linux-x86_64.AppImage}"
+
+          input_release_tag="${{ github.event.inputs.release_tag }}"
+          release_tag="${input_release_tag:-}"
+
+          draft_flag="${{ github.event.inputs.draft }}"
+          prerelease_flag="${{ github.event.inputs.prerelease }}"
+
+          echo "QT_VERSION=$qt_version" >> $GITHUB_ENV
+          echo "APP_NAME=$app_name" >> $GITHUB_ENV
+          echo "EXE_NAME=$exe_name" >> $GITHUB_ENV
+          echo "EXE_RELATIVE_PATH=$exe_relative_path" >> $GITHUB_ENV
+          echo "APPIMAGE_NAME=$appimage_name" >> $GITHUB_ENV
+          echo "RELEASE_TAG=$release_tag" >> $GITHUB_ENV
+          echo "DRAFT_FLAG=$draft_flag" >> $GITHUB_ENV
+          echo "PRERELEASE_FLAG=$prerelease_flag" >> $GITHUB_ENV
+
+      - name: Resolve build variables (push/pull_request)
+        if: github.event_name != 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -e
+
+          repo_qt_version="${{ vars.QT_VERSION }}"
+          qt_version="${repo_qt_version:-6.5.3}"
+
+          repo_app_name="${{ vars.APP_NAME }}"
+          repo_name="${{ github.event.repository.name }}"
+          app_name="${repo_app_name:-${repo_name:-qt6_minimal}}"
+
+          exe_name="$app_name"
+          exe_relative_path="build/bin/$exe_name"
+          appimage_name="$app_name-linux-x86_64.AppImage"
+
+          echo "QT_VERSION=$qt_version" >> $GITHUB_ENV
+          echo "APP_NAME=$app_name" >> $GITHUB_ENV
+          echo "EXE_NAME=$exe_name" >> $GITHUB_ENV
+          echo "EXE_RELATIVE_PATH=$exe_relative_path" >> $GITHUB_ENV
+          echo "APPIMAGE_NAME=$appimage_name" >> $GITHUB_ENV
+          echo "RELEASE_TAG=" >> $GITHUB_ENV
+          echo "DRAFT_FLAG=false" >> $GITHUB_ENV
+          echo "PRERELEASE_FLAG=false" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            libgl1-mesa-dev \
+            libxkbcommon-x11-0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-xinerama0 \
+            libxcb-cursor0 \
+            libfuse2
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          target: desktop
+          arch: gcc_64
+          cache: true
+
+      - name: Configure (CMake)
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$Qt6_DIR" \
+            -DAPP_NAME="$APP_NAME"
+
+      - name: Build
+        run: |
+          cmake --build build --config Release
+
+      - name: Package (linuxdeploy)
+        run: |
+          mkdir -p dist/linux
+          cp "$EXE_RELATIVE_PATH" dist/linux/
+
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
+
+          export QMAKE="$Qt6_DIR/bin/qmake"
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir dist/AppDir \
+            --executable "$EXE_RELATIVE_PATH" \
+            --plugin qt \
+            --output appimage
+
+          mv *.AppImage "$APPIMAGE_NAME" || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt6-linux
+          path: |
+            ${{ env.APPIMAGE_NAME }}
+            dist/linux/
+
+      - name: Create GitHub Release
+        if: env.RELEASE_TAG != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "${{ env.RELEASE_TAG }}"
+          name: "${{ env.RELEASE_TAG }}"
+          draft: ${{ env.DRAFT_FLAG == 'true' }}
+          prerelease: ${{ env.PRERELEASE_FLAG == 'true' }}
+          files: |
+            ${{ env.APPIMAGE_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

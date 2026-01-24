@@ -1,15 +1,17 @@
 {
   "cmake.sourceDirectory": "${workspaceFolder}",
-  "cmake.buildDirectory": "${workspaceFolder}/build",
-  "cmake.configureOnOpen": false,
+  "cmake.buildDirectory": "${workspaceFolder}/build/${buildType}",
+  "cmake.configureOnOpen": true,
   "cmake.generator": "Ninja",
   "cmake.exportCompileCommandsFile": true,
+  "cmake.useCMakePresets": "always",
+  "cmake.buildBeforeRun": true,
 
   "clangd.detectExtensionConflicts": true,
   "clangd.arguments": [
     "--background-index",
-    "--compile-commands-dir=${workspaceFolder}/build",
-    "-j=12",
+    "--compile-commands-dir=${workspaceFolder}/build/${buildType}",
+    "-j=0",
     "--all-scopes-completion",
     "--completion-style=detailed",
     "--header-insertion=iwyu",
@@ -30,5 +32,9 @@
   },
   "[c]": {
     "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
+
+  "cmake.configureSettings": {
+    "CMAKE_PREFIX_PATH": "${env:QT_DIR}"
   }
 }

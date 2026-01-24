@@ -3,30 +3,24 @@
   "tasks": [
     {
       "label": "cmake: configure (Debug)",
+      "detail": "配置 CMake 项目为 Debug 模式",
       "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "cmake --preset qt6-debug"
-      ],
+      "command": "cmake",
+      "args": ["--preset", "qt6-debug"],
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {}
+        "cwd": "${workspaceFolder}"
       },
       "problemMatcher": ["$gcc"],
       "group": "build"
     },
     {
       "label": "cmake: build (Debug)",
+      "detail": "构建 Debug 版本",
       "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "cmake --build --preset qt6-debug"
-      ],
+      "command": "cmake",
+      "args": ["--build", "--preset", "qt6-debug"],
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {}
+        "cwd": "${workspaceFolder}"
       },
       "problemMatcher": ["$gcc"],
       "group": {
@@ -37,54 +31,57 @@
     },
     {
       "label": "build+run: app (Debug)",
-      "dependsOrder": "sequence",
-      "dependsOn": ["cmake: build (Debug)", "run: app"],
+      "detail": "构建并运行 Debug 版本",
+      "type": "shell",
+      "command": "${command:cmake.launchTargetPath}",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$gcc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
       "group": {
         "kind": "build",
         "isDefault": true
-      }
-    },
-    {
-      "label": "run: app",
-      "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "./build/bin/${workspaceFolderBasename}"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {}
       },
       "dependsOn": ["cmake: build (Debug)"]
     },
-
+    {
+      "label": "run: app",
+      "detail": "运行 Debug 版本",
+      "type": "shell",
+      "command": "${command:cmake.launchTargetPath}",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
     {
       "label": "cmake: configure (Release)",
+      "detail": "配置 CMake 项目为 Release 模式",
       "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "cmake --preset qt6-release"
-      ],
+      "command": "cmake",
+      "args": ["--preset", "qt6-release"],
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {}
+        "cwd": "${workspaceFolder}"
       },
       "problemMatcher": ["$gcc"],
       "group": "build"
     },
     {
       "label": "cmake: build (Release)",
+      "detail": "构建 Release 版本",
       "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "cmake --build --preset qt6-release"
-      ],
+      "command": "cmake",
+      "args": ["--build", "--preset", "qt6-release"],
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {}
+        "cwd": "${workspaceFolder}"
       },
       "problemMatcher": ["$gcc"],
       "dependsOn": ["cmake: configure (Release)"],
@@ -92,46 +89,68 @@
     },
     {
       "label": "run: app (Release)",
+      "detail": "运行 Release 版本",
       "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "./build-release/bin/${workspaceFolderBasename}"
-      ],
+      "command": "${command:cmake.launchTargetPath}",
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {}
+        "cwd": "${workspaceFolder}"
       },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "build+run: app (Release)",
+      "detail": "构建并运行 Release 版本",
+      "type": "shell",
+      "command": "${command:cmake.launchTargetPath}",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$gcc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "group": "build",
       "dependsOn": ["cmake: build (Release)"]
     },
-
     {
-      "label": "clean: Debug (rm -rf build)",
+      "label": "clean: Debug",
+      "detail": "清理 Debug 构建文件",
       "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "rm -rf build"
-      ],
+      "command": "cmake",
+      "args": ["--build", "--preset", "qt6-debug", "--target", "clean"],
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {}
+        "cwd": "${workspaceFolder}"
       },
       "group": "build"
     },
     {
-      "label": "clean: Release (rm -rf build-release)",
+      "label": "clean: Release",
+      "detail": "清理 Release 构建文件",
       "type": "shell",
-      "command": "bash",
-      "args": [
-        "-c",
-        "rm -rf build-release"
-      ],
+      "command": "cmake",
+      "args": ["--build", "--preset", "qt6-release", "--target", "clean"],
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {}
+        "cwd": "${workspaceFolder}"
       },
       "group": "build"
+    },
+    {
+      "label": "clean: All",
+      "detail": "清理所有构建文件",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["-E", "echo", "Clean completed"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "dependsOn": ["clean: Debug", "clean: Release"],
+      "dependsOrder": "sequence"
     }
   ]
 }

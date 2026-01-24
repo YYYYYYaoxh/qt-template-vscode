@@ -11,6 +11,28 @@
       "includePath": [
         "${workspaceFolder}/src/**"
       ]
+    },
+    {
+      "name": "Win32",
+      "compilerPath": "C:/mingw64/bin/g++.exe",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-gcc-x64",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+      "includePath": [
+        "${workspaceFolder}/src/**"
+      ]
+    },
+    {
+      "name": "Mac",
+      "compilerPath": "/usr/bin/clang++",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "macos-clang-x64",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+      "includePath": [
+        "${workspaceFolder}/src/**"
+      ]
     }
   ]
 }

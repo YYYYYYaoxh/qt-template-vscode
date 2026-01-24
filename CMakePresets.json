@@ -8,34 +8,82 @@
   "configurePresets": [
     {
       "name": "qt6-debug",
-      "displayName": "Qt6 Debug (gcc_64)",
+      "displayName": "Qt6 Debug",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
-      "environment": {
-        "QT6_ROOT": "/home/yxh/Qt/6.5.3/gcc_64"
-      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_PREFIX_PATH": "$env{QT6_ROOT}",
-        "Qt6_DIR": "$env{QT6_ROOT}/lib/cmake/Qt6",
-        "Qt6SerialPort_DIR": "$env{QT6_ROOT}/lib/cmake/Qt6SerialPort"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
       "name": "qt6-release",
-      "displayName": "Qt6 Release (gcc_64)",
+      "displayName": "Qt6 Release",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-release",
-      "environment": {
-        "QT6_ROOT": "/home/yxh/Qt/6.5.3/gcc_64"
-      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_PREFIX_PATH": "$env{QT6_ROOT}",
-        "Qt6_DIR": "$env{QT6_ROOT}/lib/cmake/Qt6",
-        "Qt6SerialPort_DIR": "$env{QT6_ROOT}/lib/cmake/Qt6SerialPort"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "qt6-debug-linux",
+      "inherits": "qt6-debug",
+      "displayName": "Qt6 Debug (Linux)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "qt6-release-linux",
+      "inherits": "qt6-release",
+      "displayName": "Qt6 Release (Linux)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "qt6-debug-windows",
+      "inherits": "qt6-debug",
+      "displayName": "Qt6 Debug (Windows)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "qt6-release-windows",
+      "inherits": "qt6-release",
+      "displayName": "Qt6 Release (Windows)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "qt6-debug-macos",
+      "inherits": "qt6-debug",
+      "displayName": "Qt6 Debug (macOS)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "qt6-release-macos",
+      "inherits": "qt6-release",
+      "displayName": "Qt6 Release (macOS)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
       }
     }
   ],

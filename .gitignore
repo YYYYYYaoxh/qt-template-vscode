@@ -53,5 +53,26 @@ compile_commands.json
 
 *_qmlcache.qrc
 
+# Build directories
 build/
+build-*/
 .cache
+
+# Distribution directories
+dist/
+
+# VSCode settings (user-specific)
+.vscode/settings.json
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+
+# Platform-specific
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
