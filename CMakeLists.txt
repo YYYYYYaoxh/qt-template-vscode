@@ -15,8 +15,19 @@ qt_standard_project_setup()
 # 默认使用项目名作为可执行文件名
 set(APP_NAME "${PROJECT_NAME}" CACHE STRING "Application name")
 
+# Resource files
+set(RESOURCE_FILES
+    resources/resources.qrc
+)
+
+# Windows resource file for icon
+if(WIN32)
+    list(APPEND RESOURCE_FILES resources/app_icon.rc)
+endif()
+
 add_executable(${APP_NAME}
     src/main.cpp
+    ${RESOURCE_FILES}
 )
 
 target_link_libraries(${APP_NAME} PRIVATE Qt6::Widgets)

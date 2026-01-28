@@ -146,6 +146,81 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Python dependencies for icon conversion
+        shell: pwsh
+        run: |
+          pip install Pillow
+
+      - name: Install Inkscape for SVG conversion (if needed)
+        shell: pwsh
+        run: |
+          # Check if SVG file exists, only install Inkscape if needed
+          if (Test-Path "resources/icons/app_icon.svg") {
+            Write-Host "SVG file found, installing Inkscape"
+            choco install inkscape -y
+          } else {
+            Write-Host "No SVG file found, skipping Inkscape installation"
+          }
+
+      - name: Convert SVG to ICO for Windows icon
+        shell: pwsh
+        run: |
+          $icoPath = "resources/icons/app_icon.ico"
+          $svgPath = "resources/icons/app_icon.svg"
+          $pngPath = "resources/icons/app_icon.png"
+          $jpgPath = "resources/icons/app_icon.jpg"
+          $jpegPath = "resources/icons/app_icon.jpeg"
+
+          # Find the most recent source file
+          $sourceFile = $null
+          $sourceTime = 0
+
+          if (Test-Path $svgPath) {
+            $sourceFile = $svgPath
+            $sourceTime = (Get-Item $svgPath).LastWriteTime.Ticks
+          }
+          if (Test-Path $pngPath) {
+            $pngTime = (Get-Item $pngPath).LastWriteTime.Ticks
+            if ($pngTime -gt $sourceTime) {
+              $sourceFile = $pngPath
+              $sourceTime = $pngTime
+            }
+          }
+          if (Test-Path $jpgPath) {
+            $jpgTime = (Get-Item $jpgPath).LastWriteTime.Ticks
+            if ($jpgTime -gt $sourceTime) {
+              $sourceFile = $jpgPath
+              $sourceTime = $jpgTime
+            }
+          }
+          if (Test-Path $jpegPath) {
+            $jpegTime = (Get-Item $jpegPath).LastWriteTime.Ticks
+            if ($jpegTime -gt $sourceTime) {
+              $sourceFile = $jpegPath
+              $sourceTime = $jpegTime
+            }
+          }
+
+          if (-not $sourceFile) {
+            Write-Host "No supported icon file found (SVG, PNG, JPG, JPEG)"
+            exit 1
+          }
+
+          if (Test-Path $icoPath) {
+            $icoTime = (Get-Item $icoPath).LastWriteTime.Ticks
+            if ($icoTime -ge $sourceTime) {
+              Write-Host "ICO file is up-to-date, skipping conversion"
+              Write-Host "Source: $sourceFile ($(Get-Item $sourceFile).LastWriteTime))"
+              Write-Host "ICO: $icoPath ($(Get-Item $icoPath).LastWriteTime))"
+            } else {
+              Write-Host "Source file is newer, converting: $sourceFile"
+              python scripts/convert_icon.py
+            }
+          } else {
+            Write-Host "ICO file not found, converting from: $sourceFile"
+            python scripts/convert_icon.py
+          }
+
       - name: Setup Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
 
