@@ -9,8 +9,10 @@
       "intelliSenseMode": "linux-gcc-x64",
       "compileCommands": "${workspaceFolder}/build/compile_commands.json",
       "includePath": [
-        "${workspaceFolder}/src/**"
-      ]
+        "${workspaceFolder}/src/**",
+        "${env:HOME}/.conan2/p/**"
+      ],
+      "configurationProvider": "ms-vscode.cmake-tools"
     },
     {
       "name": "Win32",
@@ -20,8 +22,10 @@
       "intelliSenseMode": "windows-gcc-x64",
       "compileCommands": "${workspaceFolder}/build/compile_commands.json",
       "includePath": [
-        "${workspaceFolder}/src/**"
-      ]
+        "${workspaceFolder}/src/**",
+        "${env:USERPROFILE}/.conan2/p/**"
+      ],
+      "configurationProvider": "ms-vscode.cmake-tools"
     },
     {
       "name": "Mac",
@@ -31,8 +35,10 @@
       "intelliSenseMode": "macos-clang-x64",
       "compileCommands": "${workspaceFolder}/build/compile_commands.json",
       "includePath": [
-        "${workspaceFolder}/src/**"
-      ]
+        "${workspaceFolder}/src/**",
+        "${env:HOME}/.conan2/p/**"
+      ],
+      "configurationProvider": "ms-vscode.cmake-tools"
     }
   ]
 }

@@ -1,0 +1,10 @@
+[settings]
+os={{ detect_api.detect_os() }}
+arch={{ detect_api.detect_arch() }}
+compiler={{ detect_api.detect_compiler() }}
+compiler.version={{ detect_api.detect_compiler_version() }}
+compiler.cppstd=17
+build_type=Release
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja

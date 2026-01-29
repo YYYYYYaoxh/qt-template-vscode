@@ -7,10 +7,38 @@
   },
   "configurePresets": [
     {
+      "name": "conan-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "conan-debug",
+      "displayName": "Conan Debug",
+      "inherits": "conan-base",
+      "binaryDir": "${sourceDir}/build-conan-debug",
+      "toolchainFile": "${sourceDir}/build-conan-debug/build/generators/conan_toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "conan-release",
+      "displayName": "Conan Release",
+      "inherits": "conan-base",
+      "binaryDir": "${sourceDir}/build-conan-release",
+      "toolchainFile": "${sourceDir}/build-conan-release/build/generators/conan_toolchain.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "qt6-debug",
       "displayName": "Qt6 Debug",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
+      "binaryDir": "${sourceDir}/build-qt6-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
@@ -20,10 +48,70 @@
       "name": "qt6-release",
       "displayName": "Qt6 Release",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-release",
+      "binaryDir": "${sourceDir}/build-qt6-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "conan-debug-linux",
+      "inherits": "conan-debug",
+      "displayName": "Conan Debug (Linux)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "conan-release-linux",
+      "inherits": "conan-release",
+      "displayName": "Conan Release (Linux)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "conan-debug-windows",
+      "inherits": "conan-debug",
+      "displayName": "Conan Debug (Windows)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "conan-release-windows",
+      "inherits": "conan-release",
+      "displayName": "Conan Release (Windows)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "conan-debug-macos",
+      "inherits": "conan-debug",
+      "displayName": "Conan Debug (macOS)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "conan-release-macos",
+      "inherits": "conan-release",
+      "displayName": "Conan Release (macOS)",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
       }
     },
     {
@@ -89,12 +177,60 @@
   ],
   "buildPresets": [
     {
+      "name": "conan-debug-linux",
+      "configurePreset": "conan-debug-linux"
+    },
+    {
+      "name": "conan-release-linux",
+      "configurePreset": "conan-release-linux"
+    },
+    {
+      "name": "conan-debug-windows",
+      "configurePreset": "conan-debug-windows"
+    },
+    {
+      "name": "conan-release-windows",
+      "configurePreset": "conan-release-windows"
+    },
+    {
+      "name": "conan-debug-macos",
+      "configurePreset": "conan-debug-macos"
+    },
+    {
+      "name": "conan-release-macos",
+      "configurePreset": "conan-release-macos"
+    },
+    {
       "name": "qt6-debug",
       "configurePreset": "qt6-debug"
     },
     {
       "name": "qt6-release",
       "configurePreset": "qt6-release"
+    },
+    {
+      "name": "qt6-debug-linux",
+      "configurePreset": "qt6-debug-linux"
+    },
+    {
+      "name": "qt6-release-linux",
+      "configurePreset": "qt6-release-linux"
+    },
+    {
+      "name": "qt6-debug-windows",
+      "configurePreset": "qt6-debug-windows"
+    },
+    {
+      "name": "qt6-release-windows",
+      "configurePreset": "qt6-release-windows"
+    },
+    {
+      "name": "qt6-debug-macos",
+      "configurePreset": "qt6-debug-macos"
+    },
+    {
+      "name": "qt6-release-macos",
+      "configurePreset": "qt6-release-macos"
     }
   ]
 }

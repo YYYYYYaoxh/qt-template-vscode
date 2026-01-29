@@ -6,6 +6,10 @@ name: windows-qt6-mingw
   pull_request:
   workflow_dispatch:
     inputs:
+      build_mode:
+        description: "Build mode: conan (with Conan deps) or qt (pure Qt)"
+        required: false
+        default: "conan"
       qt_version:
         description: "Qt version"
         required: false
@@ -54,6 +58,14 @@ jobs:
   build-package:
     runs-on: windows-2022
 
+    strategy:
+      fail-fast: false
+      matrix:
+        build_mode: [conan,qt]
+
+    env:
+      BUILD_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_mode || matrix.build_mode }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -85,7 +97,12 @@ jobs:
           $exeName = if ([string]::IsNullOrWhiteSpace($inputExeName)) { "$appName.exe" } else { $inputExeName }
 
           $inputExeRelativePath = "${{ github.event.inputs.exe_relative_path }}"
-          $exeRelativePath = if ([string]::IsNullOrWhiteSpace($inputExeRelativePath)) { "build/bin/$exeName" } else { $inputExeRelativePath }
+          if ($env:BUILD_MODE -eq 'qt') {
+            $defaultExeRelativePath = "build-qt6-release/bin/$exeName"
+          } else {
+            $defaultExeRelativePath = "build-conan-release/bin/$exeName"
+          }
+          $exeRelativePath = if ([string]::IsNullOrWhiteSpace($inputExeRelativePath)) { $defaultExeRelativePath } else { $inputExeRelativePath }
 
           $inputZipName = "${{ github.event.inputs.zip_name }}"
           $zipName = if ([string]::IsNullOrWhiteSpace($inputZipName)) { "$appName-windows.zip" } else { $inputZipName }
@@ -127,7 +144,11 @@ jobs:
           $appName = if (-not [string]::IsNullOrWhiteSpace($repoAppName)) { $repoAppName } elseif (-not [string]::IsNullOrWhiteSpace($repoName)) { $repoName } else { "qt6_minimal" }
 
           $exeName = "$appName.exe"
-          $exeRelativePath = "build/bin/$exeName"
+          if ($env:BUILD_MODE -eq 'qt') {
+            $exeRelativePath = "build-qt6-release/bin/$exeName"
+          } else {
+            $exeRelativePath = "build-conan-release/bin/$exeName"
+          }
           $zipName = "$appName-windows.zip"
 
           "QT_VERSION=$qtVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -146,10 +167,41 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Python dependencies for icon conversion
+      - name: Install Python dependencies
         shell: pwsh
         run: |
           pip install Pillow
+          if ($env:BUILD_MODE -eq 'conan') {
+            pip install conan
+          }
+
+      - name: Setup Conan
+        if: env.BUILD_MODE == 'conan'
+        shell: pwsh
+        run: |
+          conan profile detect --force
+
+      - name: Install Conan dependencies
+        if: env.BUILD_MODE == 'conan'
+        shell: pwsh
+        run: |
+          # Use pre-installed MinGW on Windows runner (Qt MinGW not available yet at this step)
+          $gcc = "C:/mingw64/bin/gcc.exe"
+          $gxx = "C:/mingw64/bin/g++.exe"
+          
+          if (-not (Test-Path $gxx)) {
+            throw "MinGW g++ not found at $gxx. Please ensure MinGW is installed."
+          }
+          
+          Write-Host "Using MinGW gcc: $gcc"
+          Write-Host "Using MinGW g++: $gxx"
+          
+          # Configure Conan to use MinGW instead of MSVC with Ninja generator
+          # Use double quotes for proper variable expansion
+          conan install . --output-folder=build-conan-release --build=missing -s build_type=Release `
+            -s compiler=gcc -s compiler.version=13 -s compiler.libcxx=libstdc++11 `
+            -c tools.cmake.cmaketoolchain:generator=Ninja `
+            -c "tools.build:compiler_executables={'c': '$gcc', 'cpp': '$gxx'}"
 
       - name: Install Inkscape for SVG conversion (if needed)
         shell: pwsh
@@ -281,16 +333,29 @@ jobs:
           $gcc = Join-Path $mingwBin "gcc.exe"
           $gxx = Join-Path $mingwBin "g++.exe"
           if (-not (Test-Path $gxx)) { throw "g++ not found at $gxx" }
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" `
-            -DCMAKE_C_COMPILER="$gcc" `
-            -DCMAKE_CXX_COMPILER="$gxx" `
-            -DAPP_NAME="$env:APP_NAME"
+          if ($env:BUILD_MODE -eq 'qt') {
+            cmake -S . -B build-qt6-release -G Ninja -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" `
+              -DCMAKE_C_COMPILER="$gcc" `
+              -DCMAKE_CXX_COMPILER="$gxx" `
+              -DAPP_NAME="$env:APP_NAME"
+          } else {
+            cmake -S . -B build-conan-release -G Ninja -DCMAKE_BUILD_TYPE=Release `
+              -DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" `
+              -DCMAKE_TOOLCHAIN_FILE="build-conan-release/build/generators/conan_toolchain.cmake" `
+              -DCMAKE_C_COMPILER="$gcc" `
+              -DCMAKE_CXX_COMPILER="$gxx" `
+              -DAPP_NAME="$env:APP_NAME"
+          }
 
       - name: Build
         shell: pwsh
         run: |
-          cmake --build build --config Release
+          if ($env:BUILD_MODE -eq 'qt') {
+            cmake --build build-qt6-release --config Release
+          } else {
+            cmake --build build-conan-release --config Release
+          }
 
       - name: Package (windeployqt)
         shell: pwsh
@@ -316,13 +381,13 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: qt6-mingw-windows
+          name: qt6-mingw-windows-${{ env.BUILD_MODE }}
           path: |
             ${{ env.ZIP_NAME }}
             dist/windows/
 
       - name: Create GitHub Release
-        if: env.RELEASE_TAG != ''
+        if: env.RELEASE_TAG != '' && env.BUILD_MODE == 'conan'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "${{ env.RELEASE_TAG }}"

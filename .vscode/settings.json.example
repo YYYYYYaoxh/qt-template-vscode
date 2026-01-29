@@ -1,6 +1,6 @@
 {
   "cmake.sourceDirectory": "${workspaceFolder}",
-  "cmake.buildDirectory": "${workspaceFolder}/build/${buildType}",
+  "cmake.buildDirectory": "${workspaceFolder}/build",
   "cmake.configureOnOpen": true,
   "cmake.generator": "Ninja",
   "cmake.exportCompileCommandsFile": true,
@@ -10,7 +10,7 @@
   "clangd.detectExtensionConflicts": true,
   "clangd.arguments": [
     "--background-index",
-    "--compile-commands-dir=${workspaceFolder}/build/${buildType}",
+    "--compile-commands-dir=${workspaceFolder}/build-qt6-debug",
     "-j=0",
     "--all-scopes-completion",
     "--completion-style=detailed",
@@ -33,8 +33,17 @@
   "[c]": {
     "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
   },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
 
   "cmake.configureSettings": {
     "CMAKE_PREFIX_PATH": "${env:QT_DIR}"
-  }
+  },
+
+  "files.associations": {
+    "conanfile.py": "python"
+  },
+
+  "python.analysis.extraPaths": []
 }

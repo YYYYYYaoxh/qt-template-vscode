@@ -8,6 +8,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ============================================================================
+# Conan Dependencies (optional)
+# When using Conan, run `conan install . --output-folder=build --build=missing`
+# before configuring CMake. The generated toolchain file will be automatically
+# included via CMakePresets.json or -DCMAKE_TOOLCHAIN_FILE.
+# ============================================================================
+
+# Example: Find Conan-managed packages
+# find_package(fmt REQUIRED)
+# find_package(spdlog REQUIRED)
+
+find_package(fmt QUIET)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup()
@@ -31,6 +44,14 @@ add_executable(${APP_NAME}
 )
 
 target_link_libraries(${APP_NAME} PRIVATE Qt6::Widgets)
+
+if(fmt_FOUND)
+    target_link_libraries(${APP_NAME} PRIVATE fmt::fmt)
+    target_compile_definitions(${APP_NAME} PRIVATE HAVE_FMT=1)
+endif()
+
+# Example: Link Conan-managed libraries
+# target_link_libraries(${APP_NAME} PRIVATE fmt::fmt spdlog::spdlog)
 
 get_filename_component(QT6_PREFIX "${Qt6_DIR}/../../.." ABSOLUTE)
 set(QT6_LIB_DIR "${QT6_PREFIX}/lib")

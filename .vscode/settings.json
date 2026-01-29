@@ -8,7 +8,7 @@
   "clangd.detectExtensionConflicts": true,
   "clangd.arguments": [
     "--background-index",
-    "--compile-commands-dir=${workspaceFolder}/build",
+    "--compile-commands-dir=${workspaceFolder}/build-qt6-debug",
     "-j=12",
     "--all-scopes-completion",
     "--completion-style=detailed",

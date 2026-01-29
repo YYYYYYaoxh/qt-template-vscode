@@ -70,6 +70,14 @@ CMakeFiles/
 cmake_install.cmake
 install_manifest.txt
 
+# Conan
+CMakeUserPresets.json
+conan_toolchain.cmake
+conanbuildinfo.*
+conaninfo.txt
+graph_info.json
+conan.lock
+
 # Platform-specific
 .DS_Store
 Thumbs.db

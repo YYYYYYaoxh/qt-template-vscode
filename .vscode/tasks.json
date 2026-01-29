@@ -2,6 +2,124 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "conan: install (Debug)",
+      "detail": "安装 Conan 依赖 (Debug)",
+      "type": "shell",
+      "command": "conan",
+      "args": [
+        "install", ".",
+        "--output-folder=build-conan-debug",
+        "--build=missing",
+        "-s", "build_type=Debug"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "conan: install (Release)",
+      "detail": "安装 Conan 依赖 (Release)",
+      "type": "shell",
+      "command": "conan",
+      "args": [
+        "install", ".",
+        "--output-folder=build-conan-release",
+        "--build=missing",
+        "-s", "build_type=Release"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "conan: configure (Debug)",
+      "detail": "配置 CMake 项目 (Conan Debug)",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--preset", "conan-debug-linux"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$gcc"],
+      "group": "build",
+      "dependsOn": ["conan: install (Debug)"]
+    },
+    {
+      "label": "conan: build (Debug)",
+      "detail": "构建 Conan Debug 版本",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--build", "--preset", "conan-debug-linux"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$gcc"],
+      "group": "build",
+      "dependsOn": ["conan: configure (Debug)"]
+    },
+    {
+      "label": "conan: build+run (Debug)",
+      "detail": "构建并运行 Conan Debug 版本",
+      "type": "shell",
+      "command": "${command:cmake.launchTargetPath}",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$gcc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "dependsOn": ["conan: build (Debug)"]
+    },
+    {
+      "label": "conan: configure (Release)",
+      "detail": "配置 CMake 项目 (Conan Release)",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--preset", "conan-release-linux"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$gcc"],
+      "group": "build",
+      "dependsOn": ["conan: install (Release)"]
+    },
+    {
+      "label": "conan: build (Release)",
+      "detail": "构建 Conan Release 版本",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--build", "--preset", "conan-release-linux"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$gcc"],
+      "group": "build",
+      "dependsOn": ["conan: configure (Release)"]
+    },
+    {
+      "label": "cmake: clean conan presets",
+      "detail": "清理 Conan 生成的 CMakeUserPresets.json，避免与项目预设冲突",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["-E", "rm", "-f", "CMakeUserPresets.json"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
       "label": "cmake: configure (Debug)",
       "detail": "配置 CMake 项目为 Debug 模式",
       "type": "shell",
@@ -11,7 +129,8 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": ["$gcc"],
-      "group": "build"
+      "group": "build",
+      "dependsOn": ["cmake: clean conan presets"]
     },
     {
       "label": "cmake: build (Debug)",
@@ -72,7 +191,8 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": ["$gcc"],
-      "group": "build"
+      "group": "build",
+      "dependsOn": ["cmake: clean conan presets"]
     },
     {
       "label": "cmake: build (Release)",
